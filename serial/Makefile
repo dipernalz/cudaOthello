@@ -1,7 +1,7 @@
 CC = g++
 
-CFLAGS = -I. -Wall -Werror -O3
-# CFLAGS = -I. -Wall -Werror
+CFLAGS = -I. -Wall -Werror -O3 -DNDEBUG=1
+# CFLAGS = -I. -Wall -Werror -g
 
 DEPS = othello.hpp
 OBJ = othello.o driver.o 

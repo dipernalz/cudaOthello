@@ -2,7 +2,9 @@
 
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include <cassert>
 #include <iostream>
 
 // Board is 8x8
@@ -39,7 +41,7 @@ othello_board::~othello_board() {
     free(white);
 }
 
-othello_board **othello_board::next_boards() {
+othello_board *othello_board::next_boards(uint8_t *n_found) {
     bool *board_a, *board_b;
     if (turn == BLACK) {
         board_a = black;
@@ -49,6 +51,9 @@ othello_board **othello_board::next_boards() {
         board_b = black;
     }
 
+    uint8_t n = 0;
+    othello_board *next_boards =
+        (othello_board *)malloc(N * N * sizeof(othello_board));
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
             if (!board_a[board_index(r, c)]) continue;
@@ -65,19 +70,37 @@ othello_board **othello_board::next_boards() {
                     if (tr >= 0 && tr < N && tc >= 0 && tc < N &&
                         (tr != r + dr || tc != c + dc) &&
                         !board_a[board_index(tr, tc)]) {
-                        std::cout << (int)tr << ", " << (int)tc << std::endl;
+                        next_boards[n] = *this;
+                        bool *next_board_a, *next_board_b;
+                        if (next_boards[n].turn == BLACK) {
+                            next_board_a = next_boards[n].black;
+                            next_board_b = next_boards[n].white;
+                        } else {
+                            next_board_a = next_boards[n].white;
+                            next_board_b = next_boards[n].black;
+                        }
+                        do {
+                            next_board_a[board_index(tr, tc)] = B;
+                            next_board_b[board_index(tr, tc)] = A;
+                            tr -= dr;
+                            tc -= dc;
+                        } while (tr != r || tc != c);
+                        next_boards[n].turn = !next_boards[n].turn;
+                        n++;
                     }
                 }
             }
         }
     }
 
-    return NULL;
+    *n_found = n;
+    return next_boards;
 }
 
 void othello_board::print() {
     for (uint8_t r = 0; r < N; r++) {
         for (uint8_t c = 0; c < N; c++) {
+            assert(!black[board_index(r, c)] || !white[board_index(r, c)]);
             char piece = (black[board_index(r, c)]
                               ? 'B'
                               : (white[board_index(r, c)] ? 'W' : '.'));
@@ -85,4 +108,5 @@ void othello_board::print() {
         }
         std::cout << std::endl;
     }
+    std::cout << (turn == BLACK ? "BLACK" : "WHITE") << "'s turn" << std::endl;
 }

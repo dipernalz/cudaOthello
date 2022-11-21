@@ -8,20 +8,23 @@
 
 #include "constants.hpp"
 
-/* static helper functions */
-static inline uint8_t board_index(uint8_t row, uint8_t col) {
-    return N * row + col;
-}
+#define BOARD_INDEX(r, c) (r * N + c)
+#define POS_IN_BOARD(r, c) (r >= 0 && r < N && c >= 0 && c < N)
 
 /* private class methods */
 bool othello::make_move(uint8_t row, uint8_t col) {
     bool *board_a, *board_b;
+    uint8_t *n_color_a, *n_color_b;
     if (turn == BLACK) {
         board_a = black;
         board_b = white;
+        n_color_a = &n_black;
+        n_color_b = &n_white;
     } else {
         board_a = white;
         board_b = black;
+        n_color_a = &n_white;
+        n_color_b = &n_black;
     }
 
     bool move_made = false;
@@ -30,21 +33,23 @@ bool othello::make_move(uint8_t row, uint8_t col) {
             if (dr == 0 && dc == 0) continue;
             int8_t tr = row + dr;
             int8_t tc = col + dc;
-            while (tr >= 0 && tr < N && tc >= 0 && tc < N &&
-                   board_b[board_index(tr, tc)]) {
+            while (POS_IN_BOARD(tr, tc) && board_b[BOARD_INDEX(tr, tc)]) {
                 tr += dr;
                 tc += dc;
             }
-            if (tr >= 0 && tr < N && tc >= 0 && tc < N &&
-                (tr != row + dr || tc != col + dc) &&
-                board_a[board_index(tr, tc)]) {
+            if (POS_IN_BOARD(tr, tc) && (tr != row + dr || tc != col + dc) &&
+                board_a[BOARD_INDEX(tr, tc)]) {
+                *n_color_a -= move_made;
                 move_made = true;
                 do {
                     tr -= dr;
                     tc -= dc;
-                    board_a[board_index(tr, tc)] = TAKEN;
-                    board_b[board_index(tr, tc)] = EMPTY;
+                    board_a[BOARD_INDEX(tr, tc)] = TAKEN;
+                    board_b[BOARD_INDEX(tr, tc)] = EMPTY;
+                    (*n_color_a)++;
+                    (*n_color_b)--;
                 } while (tr != row || tc != col);
+                (*n_color_b)++;
             }
         }
     }
@@ -56,12 +61,14 @@ bool othello::make_move(uint8_t row, uint8_t col) {
 /* public class methods */
 othello::othello() {
     black = (bool *)calloc(N * N, sizeof(bool));
-    black[board_index(4, 3)] = TAKEN;
-    black[board_index(3, 4)] = TAKEN;
+    black[BOARD_INDEX(3, 4)] = TAKEN;
+    black[BOARD_INDEX(4, 3)] = TAKEN;
+    n_black = 2;
 
     white = (bool *)calloc(N * N, sizeof(bool));
-    white[board_index(3, 3)] = TAKEN;
-    white[board_index(4, 4)] = TAKEN;
+    white[BOARD_INDEX(3, 3)] = TAKEN;
+    white[BOARD_INDEX(4, 4)] = TAKEN;
+    n_white = 2;
 
     turn = BLACK;
 }
@@ -86,7 +93,7 @@ othello *othello::next_boards(uint8_t *n_found) {
     next_boards[n] = *this;
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
-            if (!board_a[board_index(r, c)] && !board_b[board_index(r, c)] &&
+            if (!board_a[BOARD_INDEX(r, c)] && !board_b[BOARD_INDEX(r, c)] &&
                 next_boards[n].make_move(r, c))
                 next_boards[++n] = *this;
         }
@@ -100,13 +107,20 @@ othello *othello::next_boards(uint8_t *n_found) {
 void othello::print() {
     for (uint8_t r = 0; r < N; r++) {
         for (uint8_t c = 0; c < N; c++) {
-            assert(!black[board_index(r, c)] || !white[board_index(r, c)]);
-            char piece = black[board_index(r, c)]
+            assert(!black[BOARD_INDEX(r, c)] || !white[BOARD_INDEX(r, c)]);
+            char piece = black[BOARD_INDEX(r, c)]
                              ? 'B'
-                             : (white[board_index(r, c)] ? 'W' : '.');
+                             : (white[BOARD_INDEX(r, c)] ? 'W' : '.');
             std::cout << piece << ' ';
         }
         std::cout << std::endl;
     }
-    std::cout << (turn == BLACK ? "BLACK" : "WHITE") << "'s turn" << std::endl;
+
+    std::cout << (int)n_black << ' ' << (int)n_white << std::endl;
+    if (get_n_placed() == N * N)
+        std::cout << "Game over" << std::endl;
+    else
+        std::cout << (turn == BLACK ? "BLACK" : "WHITE") << "'s turn"
+                  << std::endl
+                  << std::endl;
 }

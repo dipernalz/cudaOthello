@@ -12,6 +12,8 @@ class othello {
     bool *black;
     bool *white;
     bool turn;
+    uint8_t n_black;
+    uint8_t n_white;
 
     bool make_move(uint8_t row, uint8_t col);
 
@@ -26,6 +28,8 @@ class othello {
         memcpy(white, other.white, N * N * sizeof(bool));
 
         turn = other.turn;
+        n_black = other.n_black;
+        n_white = other.n_white;
 
         return *this;
     }
@@ -35,6 +39,8 @@ class othello {
     othello *next_boards(uint8_t *n_found);
 
     inline void change_turn() { turn = !turn; }
+
+    inline uint8_t get_n_placed() { return n_black + n_white; }
 
     void print();
 };

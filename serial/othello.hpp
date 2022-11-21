@@ -1,6 +1,11 @@
+#ifndef OTHELLO_H
+#define OTHELLO_H
+
 #include <cinttypes>
 #include <cstdlib>
 #include <cstring>
+
+#include "constants.hpp"
 
 class othello {
    private:
@@ -14,11 +19,11 @@ class othello {
     othello();
 
     othello &operator=(const othello &other) {
-        black = (bool *)malloc(64 * sizeof(bool));
-        memcpy(black, other.black, 64 * sizeof(bool));
+        black = (bool *)malloc(N * N * sizeof(bool));
+        memcpy(black, other.black, N * N * sizeof(bool));
 
-        white = (bool *)malloc(64 * sizeof(bool));
-        memcpy(white, other.white, 64 * sizeof(bool));
+        white = (bool *)malloc(N * N * sizeof(bool));
+        memcpy(white, other.white, N * N * sizeof(bool));
 
         turn = other.turn;
 
@@ -33,3 +38,5 @@ class othello {
 
     void print();
 };
+
+#endif

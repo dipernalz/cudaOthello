@@ -6,16 +6,7 @@
 #include <cstring>
 #include <iostream>
 
-// Board is 8x8
-#define N 8
-
-// States of squares on the board
-#define EMPTY false
-#define TAKEN true
-
-// Colors of pieces
-#define BLACK false
-#define WHITE true
+#include "constants.hpp"
 
 /* static helper functions */
 static inline uint8_t board_index(uint8_t row, uint8_t col) {
@@ -64,11 +55,11 @@ bool othello::make_move(uint8_t row, uint8_t col) {
 
 /* public class methods */
 othello::othello() {
-    black = (bool *)calloc(64, sizeof(bool));
+    black = (bool *)calloc(N * N, sizeof(bool));
     black[board_index(4, 3)] = TAKEN;
     black[board_index(3, 4)] = TAKEN;
 
-    white = (bool *)calloc(64, sizeof(bool));
+    white = (bool *)calloc(N * N, sizeof(bool));
     white[board_index(3, 3)] = TAKEN;
     white[board_index(4, 4)] = TAKEN;
 

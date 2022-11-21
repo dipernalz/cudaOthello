@@ -22,6 +22,46 @@ static inline uint8_t board_index(uint8_t row, uint8_t col) {
     return N * row + col;
 }
 
+/* private class methods */
+bool othello::make_move(uint8_t row, uint8_t col) {
+    bool *board_a, *board_b;
+    if (turn == BLACK) {
+        board_a = black;
+        board_b = white;
+    } else {
+        board_a = white;
+        board_b = black;
+    }
+
+    bool move_made = false;
+    for (int8_t dr = -1; dr <= 1; dr++) {
+        for (int8_t dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue;
+            int8_t tr = row + dr;
+            int8_t tc = col + dc;
+            while (tr >= 0 && tr < N && tc >= 0 && tc < N &&
+                   board_b[board_index(tr, tc)]) {
+                tr += dr;
+                tc += dc;
+            }
+            if (tr >= 0 && tr < N && tc >= 0 && tc < N &&
+                (tr != row + dr || tc != col + dc) &&
+                board_a[board_index(tr, tc)]) {
+                move_made = true;
+                do {
+                    tr -= dr;
+                    tc -= dc;
+                    board_a[board_index(tr, tc)] = TAKEN;
+                    board_b[board_index(tr, tc)] = EMPTY;
+                } while (tr != row || tc != col);
+            }
+        }
+    }
+
+    if (move_made) change_turn();
+    return move_made;
+}
+
 /* public class methods */
 othello::othello() {
     black = (bool *)calloc(64, sizeof(bool));
@@ -52,45 +92,16 @@ othello *othello::next_boards(uint8_t *n_found) {
 
     uint8_t n = 0;
     othello *next_boards = (othello *)malloc(N * N * sizeof(othello));
+    next_boards[n] = *this;
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
-            if (!board_a[board_index(r, c)]) continue;
-            for (int8_t dr = -1; dr <= 1; dr++) {
-                for (int8_t dc = -1; dc <= 1; dc++) {
-                    if (dr == 0 && dc == 0) continue;
-                    int8_t tr = r + dr;
-                    int8_t tc = c + dc;
-                    while (tr >= 0 && tr < N && tc >= 0 && tc < N &&
-                           board_b[board_index(tr, tc)]) {
-                        tr += dr;
-                        tc += dc;
-                    }
-                    if (tr >= 0 && tr < N && tc >= 0 && tc < N &&
-                        (tr != r + dr || tc != c + dc) &&
-                        !board_a[board_index(tr, tc)]) {
-                        next_boards[n] = *this;
-                        bool *next_board_a, *next_board_b;
-                        if (next_boards[n].turn == BLACK) {
-                            next_board_a = next_boards[n].black;
-                            next_board_b = next_boards[n].white;
-                        } else {
-                            next_board_a = next_boards[n].white;
-                            next_board_b = next_boards[n].black;
-                        }
-                        do {
-                            next_board_a[board_index(tr, tc)] = TAKEN;
-                            next_board_b[board_index(tr, tc)] = EMPTY;
-                            tr -= dr;
-                            tc -= dc;
-                        } while (tr != r || tc != c);
-                        next_boards[n].turn = !next_boards[n].turn;
-                        n++;
-                    }
-                }
-            }
+            if (!board_a[board_index(r, c)] && !board_b[board_index(r, c)] &&
+                next_boards[n].make_move(r, c))
+                next_boards[++n] = *this;
         }
     }
 
+    next_boards[n].board_free();
     *n_found = n;
     return next_boards;
 }

@@ -15,14 +15,22 @@ int main() {
 
         uint8_t n_found;
         othello *next_boards = board.next_boards(&n_found);
+
         if (!n_found) {
-            board.board_free();
             free_board_array(next_boards, n_found);
-            break;
+            board.change_turn();
+            board.print();
+
+            next_boards = board.next_boards(&n_found);
+            if (!n_found) {
+                free_board_array(next_boards, n_found);
+                board.board_free();
+                break;
+            }
         }
 
         board.board_free();
-        free_board_array(next_boards, n_found);
         board = next_boards[0];
+        free_board_array(next_boards, n_found);
     }
 }

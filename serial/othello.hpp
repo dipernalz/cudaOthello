@@ -8,6 +8,8 @@ class othello {
     bool *white;
     bool turn;
 
+    bool make_move(uint8_t row, uint8_t col);
+
    public:
     othello();
 
@@ -26,6 +28,8 @@ class othello {
     void board_free();
 
     othello *next_boards(uint8_t *n_found);
+
+    inline void change_turn() { turn = !turn; }
 
     void print();
 };

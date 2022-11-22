@@ -6,17 +6,10 @@
 #include <iostream>
 
 #include "constants.hpp"
+#include "vector.hpp"
 
 #define BOARD_INDEX(r, c) (r * N + c)
 #define POS_IN_BOARD(r, c) (r >= 0 && r < N && c >= 0 && c < N)
-
-/* move_vector - public class methods */
-move_vector::move_vector() {
-    moves = new move[N * N];
-    n = 0;
-}
-
-move_vector::~move_vector() { delete[] moves; }
 
 /* othello - private class methods */
 bool othello::is_move(uint8_t row, uint8_t col) {
@@ -80,13 +73,13 @@ othello::~othello() {
     delete[] white;
 }
 
-move_vector othello::generate_moves() {
-    move_vector moves;
+vector<move> othello::generate_moves() {
+    vector<move> moves;
     for (uint8_t r = 0; r < N; r++) {
         for (uint8_t c = 0; c < N; c++) {
             if (!black[BOARD_INDEX(r, c)] && !white[BOARD_INDEX(r, c)] &&
                 is_move(r, c))
-                moves.add_move(r, c);
+                moves.push({r, c});
         }
     }
     return moves;

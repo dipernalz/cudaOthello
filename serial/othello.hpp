@@ -6,33 +6,12 @@
 #include <cstdlib>
 
 #include "constants.hpp"
+#include "vector.hpp"
 
 typedef struct _move {
     uint8_t row;
     uint8_t col;
 } move;
-
-class move_vector {
-   private:
-    move *moves;
-    uint8_t n;
-
-   public:
-    move_vector();
-
-    ~move_vector();
-
-    inline void add_move(uint8_t &row, uint8_t &col) {
-        moves[n++] = {row, col};
-    }
-
-    inline bool is_empty() { return !n; }
-
-    inline move get_random_move() {
-        assert(n != 0);
-        return moves[rand() % n];
-    }
-};
 
 class othello {
    private:
@@ -51,7 +30,7 @@ class othello {
 
     ~othello();
 
-    move_vector generate_moves();
+    vector<move> generate_moves();
 
     bool make_move(move m);
 

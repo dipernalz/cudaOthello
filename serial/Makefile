@@ -3,7 +3,7 @@ CC = g++
 CFLAGS = -I. -Wall -Werror -O3 -DNDEBUG=1
 # CFLAGS = -I. -Wall -Werror -g
 
-DEPS = othello.hpp mcts.hpp constants.hpp
+DEPS = constants.hpp vector.hpp othello.hpp mcts.hpp
 OBJ = othello.o mcts.o driver.o 
 
 %.o: %.c $(DEPS)

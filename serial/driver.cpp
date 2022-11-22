@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <iostream>
 
 #include "constants.hpp"
@@ -9,27 +8,18 @@ static void play_one_game(bool print) {
     while (true) {
         if (print) board.print();
         if (board.get_n_placed() == N * N) break;
-        board_array *next_boards = board.next_boards();
 
-        if (!next_boards->n) {
-            next_boards->array_free();
-            delete next_boards;
+        move_vector moves = board.generate_moves();
+        if (moves.is_empty()) {
             board.change_turn();
-            if (print) board.print();
-            next_boards = board.next_boards();
-            if (!next_boards->n) {
-                next_boards->array_free();
-                delete next_boards;
-                break;
-            }
+            move_vector moves = board.generate_moves();
+            if (moves.is_empty()) break;
+            board.make_move(moves.get_random_move());
+            continue;
         }
 
-        board.board_free();
-        board = next_boards->boards[rand() % next_boards->n];
-        next_boards->array_free();
-        delete next_boards;
+        board.make_move(moves.get_random_move());
     }
-    board.board_free();
 }
 
 static void play_n_games(uint32_t n, bool print) {
@@ -39,6 +29,6 @@ static void play_n_games(uint32_t n, bool print) {
 int main() {
     srand((unsigned)time(NULL));
 
-    play_n_games(1, true);
-    // play_n_games(10000, false);
+    // play_n_games(1, true);
+    play_n_games(10000, false);
 }

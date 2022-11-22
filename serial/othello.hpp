@@ -7,6 +7,8 @@
 
 #include "constants.hpp"
 
+class board_array;
+
 class othello {
    private:
     bool *black;
@@ -36,13 +38,23 @@ class othello {
 
     void board_free();
 
-    othello *next_boards(uint8_t *n_found);
+    board_array *next_boards();
 
     inline void change_turn() { turn = !turn; }
 
     inline uint8_t get_n_placed() { return n_black + n_white; }
 
     void print();
+};
+
+class board_array {
+   public:
+    othello *boards;
+    uint8_t n;
+
+    board_array();
+
+    void array_free();
 };
 
 #endif

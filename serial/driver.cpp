@@ -4,37 +4,32 @@
 #include "constants.hpp"
 #include "othello.hpp"
 
-static void free_board_array(othello *board_array, uint8_t n) {
-    for (uint8_t i = 0; i < n; i++) board_array[i].board_free();
-    free(board_array);
-}
-
 static void play_one_game(bool print) {
     othello board;
     while (true) {
         if (print) board.print();
         if (board.get_n_placed() == N * N) break;
+        board_array *next_boards = board.next_boards();
 
-        uint8_t n_found;
-        othello *next_boards = board.next_boards(&n_found);
-
-        if (!n_found) {
-            free_board_array(next_boards, n_found);
+        if (!next_boards->n) {
+            next_boards->array_free();
+            delete next_boards;
             board.change_turn();
             if (print) board.print();
-
-            next_boards = board.next_boards(&n_found);
-            if (!n_found) {
-                free_board_array(next_boards, n_found);
-                board.board_free();
+            next_boards = board.next_boards();
+            if (!next_boards->n) {
+                next_boards->array_free();
+                delete next_boards;
                 break;
             }
         }
 
         board.board_free();
-        board = next_boards[rand() % n_found];
-        free_board_array(next_boards, n_found);
+        board = next_boards->boards[rand() % next_boards->n];
+        next_boards->array_free();
+        delete next_boards;
     }
+    board.board_free();
 }
 
 static void play_n_games(uint32_t n, bool print) {

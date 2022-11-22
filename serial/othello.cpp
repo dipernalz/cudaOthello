@@ -11,7 +11,7 @@
 #define BOARD_INDEX(r, c) (r * N + c)
 #define POS_IN_BOARD(r, c) (r >= 0 && r < N && c >= 0 && c < N)
 
-/* private class methods */
+/* othello - private class methods */
 bool othello::make_move(uint8_t row, uint8_t col) {
     bool *board_a, *board_b;
     uint8_t *n_color_a, *n_color_b;
@@ -58,7 +58,7 @@ bool othello::make_move(uint8_t row, uint8_t col) {
     return move_made;
 }
 
-/* public class methods */
+/* othello - public class methods */
 othello::othello() {
     black = (bool *)calloc(N * N, sizeof(bool));
     black[BOARD_INDEX(3, 4)] = TAKEN;
@@ -78,7 +78,7 @@ void othello::board_free() {
     free(white);
 }
 
-othello *othello::next_boards(uint8_t *n_found) {
+board_array *othello::next_boards() {
     bool *board_a, *board_b;
     if (turn == BLACK) {
         board_a = black;
@@ -88,19 +88,17 @@ othello *othello::next_boards(uint8_t *n_found) {
         board_b = black;
     }
 
-    uint8_t n = 0;
-    othello *next_boards = (othello *)malloc(N * N * sizeof(othello));
-    next_boards[n] = *this;
+    board_array *next_boards = new board_array();
+    next_boards->boards[0] = *this;
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
             if (!board_a[BOARD_INDEX(r, c)] && !board_b[BOARD_INDEX(r, c)] &&
-                next_boards[n].make_move(r, c))
-                next_boards[++n] = *this;
+                next_boards->boards[next_boards->n].make_move(r, c))
+                next_boards->boards[++next_boards->n] = *this;
         }
     }
 
-    next_boards[n].board_free();
-    *n_found = n;
+    next_boards->boards[next_boards->n].board_free();
     return next_boards;
 }
 
@@ -123,4 +121,15 @@ void othello::print() {
         std::cout << (turn == BLACK ? "BLACK" : "WHITE") << "'s turn"
                   << std::endl
                   << std::endl;
+}
+
+/* next_boards - public class methods */
+board_array::board_array() {
+    boards = (othello *)malloc(N * N * sizeof(othello));
+    n = 0;
+}
+
+void board_array::array_free() {
+    for (uint8_t i = 0; i < n; i++) boards[i].board_free();
+    free(boards);
 }

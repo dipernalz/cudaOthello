@@ -79,20 +79,11 @@ void othello::board_free() {
 }
 
 board_array *othello::next_boards() {
-    bool *board_a, *board_b;
-    if (turn == BLACK) {
-        board_a = black;
-        board_b = white;
-    } else {
-        board_a = white;
-        board_b = black;
-    }
-
     board_array *next_boards = new board_array();
     next_boards->boards[0] = *this;
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
-            if (!board_a[BOARD_INDEX(r, c)] && !board_b[BOARD_INDEX(r, c)] &&
+            if (!black[BOARD_INDEX(r, c)] && !white[BOARD_INDEX(r, c)] &&
                 next_boards->boards[next_boards->n].make_move(r, c))
                 next_boards->boards[++next_boards->n] = *this;
         }

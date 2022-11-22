@@ -3,8 +3,8 @@ CC = g++
 CFLAGS = -I. -Wall -Werror -O3 -DNDEBUG=1
 # CFLAGS = -I. -Wall -Werror -g
 
-DEPS = othello.hpp
-OBJ = othello.o driver.o 
+DEPS = othello.hpp mcts.hpp constants.hpp
+OBJ = othello.o mcts.o driver.o 
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

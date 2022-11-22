@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cinttypes>
 #include <cstdlib>
-#include <cstring>
 
 #include "constants.hpp"
 
@@ -48,21 +47,9 @@ class othello {
    public:
     othello();
 
+    othello(const othello &other);
+
     ~othello();
-
-    othello &operator=(const othello &other) {
-        black = new bool[N * N];
-        memcpy(black, other.black, N * N * sizeof(bool));
-
-        white = new bool[N * N];
-        memcpy(white, other.white, N * N * sizeof(bool));
-
-        turn = other.turn;
-        n_black = other.n_black;
-        n_white = other.n_white;
-
-        return *this;
-    }
 
     move_vector generate_moves();
 
@@ -71,6 +58,10 @@ class othello {
     void print();
 
     inline void change_turn() { turn = !turn; }
+
+    inline uint8_t &get_n_black() { return n_black; }
+
+    inline uint8_t &get_n_white() { return n_white; }
 
     inline uint8_t get_n_placed() { return n_black + n_white; }
 };

@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <cstring>
 #include <iostream>
 
 #include "constants.hpp"
@@ -60,6 +61,18 @@ othello::othello() {
     n_white = 2;
 
     turn = BLACK;
+}
+
+othello::othello(const othello &other) {
+    black = new bool[N * N];
+    memcpy(black, other.black, N * N * sizeof(bool));
+
+    white = new bool[N * N];
+    memcpy(white, other.white, N * N * sizeof(bool));
+
+    turn = other.turn;
+    n_black = other.n_black;
+    n_white = other.n_white;
 }
 
 othello::~othello() {

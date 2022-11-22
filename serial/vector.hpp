@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cinttypes>
 #include <cstdlib>
+#include <iostream>
 
 template <class T>
 class vector {
@@ -13,13 +14,20 @@ class vector {
 
    public:
     vector() {
-        data = new T[N * N];
+        data = (T *)malloc(N * N * sizeof(T));
         n = 0;
     }
 
-    ~vector() { delete[] data; }
+    ~vector() { free(data); }
+
+    inline T &get(int i) {
+        assert(i < n);
+        return data[i];
+    }
 
     inline void push(T t) { data[n++] = t; }
+
+    inline uint8_t size() { return n; }
 
     inline bool is_empty() { return !n; }
 

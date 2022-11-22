@@ -28,6 +28,8 @@ class othello {
 
     othello(const othello &other);
 
+    othello(const othello *other);
+
     ~othello();
 
     vector<move> generate_moves();

@@ -68,6 +68,18 @@ othello::othello(const othello &other) {
     n_white = other.n_white;
 }
 
+othello::othello(const othello *other) {
+    black = new bool[N * N];
+    memcpy(black, other->black, N * N * sizeof(bool));
+
+    white = new bool[N * N];
+    memcpy(white, other->white, N * N * sizeof(bool));
+
+    turn = other->turn;
+    n_black = other->n_black;
+    n_white = other->n_white;
+}
+
 othello::~othello() {
     delete[] black;
     delete[] white;

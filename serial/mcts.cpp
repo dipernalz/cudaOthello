@@ -8,6 +8,9 @@
 #include "othello.hpp"
 #include "vector.hpp"
 
+#define MAX_ITER 5000
+#define N_SIMS 100
+
 class node {
    public:
     othello *board;
@@ -136,15 +139,12 @@ static void backprop(sim_results &results, node *&nd) {
 }
 
 move find_best_move(othello *starting_board) {
-    uint32_t n_sims = 20;
-    uint32_t n_iter = 200;
-
     if (starting_board->generate_moves().is_empty()) return {-1, -1};
 
     node *root = new node(new othello(starting_board));
 
     uint32_t n = 0;
-    for (uint32_t i = 0; i < n_iter; i++) {
+    for (uint32_t i = 0; i < MAX_ITER; i++) {
         node *current_node = root;
         while (current_node->children && !current_node->children->is_empty())
             current_node = current_node->select_child(n, false);
@@ -153,9 +153,14 @@ move find_best_move(othello *starting_board) {
             if (!current_node->children->is_empty())
                 current_node = current_node->select_child(n, false);
         }
-        sim_results results = sim_n_games(n_sims, current_node->board);
+        sim_results results = sim_n_games(N_SIMS, current_node->board);
         backprop(results, current_node);
-        n += n_sims;
+        n += N_SIMS;
+
+        if (root->children != NULL) {
+            move mv = root->select_child(0, true)->mv;
+            std::cout << (int)mv.row << ' ' << (int)mv.col << std::endl;
+        }
     }
 
     move mv = root->select_child(0, true)->mv;

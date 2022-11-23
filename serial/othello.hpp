@@ -26,9 +26,9 @@ class othello {
    public:
     othello();
 
-    othello(const othello &other);
-
     othello(const othello *other);
+
+    othello(char *input, char trn);
 
     ~othello();
 
@@ -37,6 +37,8 @@ class othello {
     bool make_move(move m);
 
     void print();
+
+    void print_grid();
 
     inline void change_turn() { turn = !turn; }
 

@@ -56,18 +56,6 @@ othello::othello() {
     turn = BLACK;
 }
 
-othello::othello(const othello &other) {
-    black = new bool[N * N];
-    memcpy(black, other.black, N * N * sizeof(bool));
-
-    white = new bool[N * N];
-    memcpy(white, other.white, N * N * sizeof(bool));
-
-    turn = other.turn;
-    n_black = other.n_black;
-    n_white = other.n_white;
-}
-
 othello::othello(const othello *other) {
     black = new bool[N * N];
     memcpy(black, other->black, N * N * sizeof(bool));
@@ -78,6 +66,23 @@ othello::othello(const othello *other) {
     turn = other->turn;
     n_black = other->n_black;
     n_white = other->n_white;
+}
+
+othello::othello(char *input, char trn) {
+    black = new bool[N * N]();
+    white = new bool[N * N]();
+
+    for (int i = 0; i < N * N; i++) {
+        if (input[i] == 'B') {
+            black[i] = TAKEN;
+            n_black++;
+        } else if (input[i] == 'W') {
+            white[i] = TAKEN;
+            n_white++;
+        }
+    }
+
+    turn = trn == 'B' ? BLACK : WHITE;
 }
 
 othello::~othello() {
@@ -145,6 +150,19 @@ bool othello::make_move(move mv) {
 }
 
 void othello::print() {
+    for (uint8_t r = 0; r < N; r++) {
+        for (uint8_t c = 0; c < N; c++) {
+            assert(!black[BOARD_INDEX(r, c)] || !white[BOARD_INDEX(r, c)]);
+            char piece = black[BOARD_INDEX(r, c)]
+                             ? 'B'
+                             : (white[BOARD_INDEX(r, c)] ? 'W' : '.');
+            std::cout << piece;
+        }
+    }
+    std::cout << std::endl;
+}
+
+void othello::print_grid() {
     for (uint8_t r = 0; r < N; r++) {
         for (uint8_t c = 0; c < N; c++) {
             assert(!black[BOARD_INDEX(r, c)] || !white[BOARD_INDEX(r, c)]);

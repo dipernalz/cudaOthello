@@ -114,7 +114,7 @@ static int8_t sim_rand_game(othello *starting_board) {
 
 static sim_results sim_n_games(uint32_t n, othello *board) {
     sim_results results = {n, 0, 0, 0};
-    for (int i = 0; i < n; i++) {
+    for (uint32_t i = 0; i < n; i++) {
         int8_t result = sim_rand_game(board);
         if (result > 0)
             results.wins++;

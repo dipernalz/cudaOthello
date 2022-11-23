@@ -22,7 +22,6 @@ bool othello::is_move(uint8_t row, uint8_t col) {
         board_b = black;
     }
 
-    bool move_made = false;
     for (int8_t dr = -1; dr <= 1; dr++) {
         for (int8_t dc = -1; dc <= 1; dc++) {
             if (dr == 0 && dc == 0) continue;

@@ -138,8 +138,8 @@ static void backprop(sim_results &results, node *&nd) {
     }
 }
 
-move find_best_move(othello *starting_board) {
-    if (starting_board->generate_moves().is_empty()) return {-1, -1};
+void find_best_move(othello *starting_board) {
+    if (starting_board->generate_moves().is_empty()) return;
 
     node *root = new node(new othello(starting_board));
 
@@ -158,12 +158,12 @@ move find_best_move(othello *starting_board) {
         n += N_SIMS;
 
         if (root->children != NULL) {
-            move mv = root->select_child(0, true)->mv;
-            std::cout << (int)mv.row << ' ' << (int)mv.col << std::endl;
+            othello *board = new othello(starting_board);
+            board->make_move(root->select_child(0, true)->mv);
+            board->print();
+            delete board;
         }
     }
 
-    move mv = root->select_child(0, true)->mv;
     delete root;
-    return mv;
 }

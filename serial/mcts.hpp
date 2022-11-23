@@ -5,6 +5,6 @@
 
 #include "othello.hpp"
 
-move find_best_move(othello *starting_board);
+void find_best_move(othello *starting_board);
 
 #endif

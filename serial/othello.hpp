@@ -9,8 +9,8 @@
 #include "vector.hpp"
 
 typedef struct _move {
-    uint8_t row;
-    uint8_t col;
+    int8_t row;
+    int8_t col;
 } move;
 
 class othello {
@@ -39,6 +39,8 @@ class othello {
     void print();
 
     inline void change_turn() { turn = !turn; }
+
+    inline bool &get_turn() { return turn; }
 
     inline uint8_t &get_n_black() { return n_black; }
 

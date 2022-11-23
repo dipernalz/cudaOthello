@@ -87,8 +87,8 @@ othello::~othello() {
 
 vector<move> othello::generate_moves() {
     vector<move> moves;
-    for (uint8_t r = 0; r < N; r++) {
-        for (uint8_t c = 0; c < N; c++) {
+    for (int8_t r = 0; r < N; r++) {
+        for (int8_t c = 0; c < N; c++) {
             if (!black[BOARD_INDEX(r, c)] && !white[BOARD_INDEX(r, c)] &&
                 is_move(r, c))
                 moves.push({r, c});

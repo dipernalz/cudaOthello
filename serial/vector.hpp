@@ -18,7 +18,7 @@ class vector {
         n = 0;
     }
 
-    ~vector() { free(data); }
+    /* ~vector() { free(data); } */
 
     inline T &get(int i) {
         assert(i < n);
@@ -26,6 +26,12 @@ class vector {
     }
 
     inline void push(T t) { data[n++] = t; }
+
+    inline T remove(uint8_t i) {
+        T entry = data[i];
+        data[i] = data[--n];
+        return entry;
+    }
 
     inline uint8_t size() { return n; }
 

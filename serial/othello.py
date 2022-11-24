@@ -4,7 +4,7 @@ import subprocess
 
 
 N = 8
-TIMEOUT = 0.1
+TIMEOUT = 10
 STARTING_BOARD = "...........................WB......BW..........................."
 
 
@@ -33,6 +33,8 @@ def get_next_board(board, turn, mode, r=None, c=None):
 
 
 def play_n_games(n):
+    global TIMEOUT
+    TIMEOUT = .1
     wins = 0
     draws = 0
     losses = 0
@@ -67,13 +69,13 @@ def play_n_games(n):
         print()
 
 
-def play_user():
+def play_user(start_turn):
     board = STARTING_BOARD
     turn = "B"
     while board.count("."):
         print_board(board)
         print()
-        if turn == "B":
+        if turn == start_turn:
             r, c = map(int, input("Enter a move (r c): ").strip().split())
             print()
             next_board = get_next_board(board, turn, "2", r, c)
@@ -82,7 +84,7 @@ def play_user():
             next_board = get_next_board(board, turn, "1")
         if not next_board:
             turn = other_turn(turn)
-            if turn == "B":
+            if turn == start_turn:
                 r, c = map(int, input("Enter a move (r c): ").strip().split())
                 print()
                 next_board = get_next_board(board, turn, "2", r, c)
@@ -93,11 +95,12 @@ def play_user():
         board = next_board
         turn = other_turn(turn)
     print_board(board)
+    print(board.count("B"), board.count("W"))
 
 
 def main():
-    # play_n_games(100)
-    play_user()
+    # play_n_games(1000)
+    play_user("W")
 
 
 if __name__ == "__main__":

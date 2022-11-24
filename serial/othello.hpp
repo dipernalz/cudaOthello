@@ -36,6 +36,8 @@ class othello {
 
     bool make_move(move m);
 
+    int32_t eval();
+
     void print();
 
     void print_grid();

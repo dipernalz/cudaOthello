@@ -148,6 +148,41 @@ bool othello::make_move(move mv) {
     return move_made;
 }
 
+int32_t othello::eval() {
+    bool *board_a, *board_b;
+    if (turn == BLACK) {
+        board_a = black;
+        board_b = white;
+    } else {
+        board_a = white;
+        board_b = black;
+    }
+
+    int32_t score = 0;
+
+    uint8_t x[2] = {0, N - 1};
+    for (uint8_t i = 0; i < 2; i++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            if (board_a[BOARD_INDEX(x[i], x[j])]) score += 10;
+            if (board_b[BOARD_INDEX(x[i], x[j])]) score -= 10;
+        }
+    }
+    uint8_t y[2] = {1, N - 2};
+    for (uint8_t i = 0; i < 2; i++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            if (board_a[BOARD_INDEX(y[i], y[j])]) score -= 5;
+            if (board_b[BOARD_INDEX(y[i], y[j])]) score += 5;
+        }
+    }
+
+    score += this->generate_moves().size();
+    change_turn();
+    score -= this->generate_moves().size();
+    change_turn();
+
+    return score;
+}
+
 void othello::print() {
     for (uint8_t r = 0; r < N; r++) {
         for (uint8_t c = 0; c < N; c++) {

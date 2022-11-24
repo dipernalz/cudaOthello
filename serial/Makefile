@@ -11,7 +11,7 @@ othello: $(OBJ)
 driver.o: driver.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%.o: %.cpp %.hpp
+%.o: %.cpp %.hpp vector.hpp constants.hpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

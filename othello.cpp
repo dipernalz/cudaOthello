@@ -8,9 +8,6 @@
 #include "constants.hpp"
 #include "vector.hpp"
 
-#define BOARD_INDEX(r, c) (r * N + c)
-#define POS_IN_BOARD(r, c) (r >= 0 && r < N && c >= 0 && c < N)
-
 /* othello - private class methods */
 bool othello::is_move(uint8_t row, uint8_t col) {
     bool *board_a, *board_b;

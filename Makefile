@@ -1,9 +1,9 @@
-CC = g++
+CC = nvcc
 
-CFLAGS = -I. -Wall -Werror -O3 -DNDEBUG=1
-# CFLAGS = -I. -Wall -Werror -g
+# CFLAGS = -I. -O3 -DNDEBUG=1
+CFLAGS = -I. -g
 
-OBJ = othello.o mcts.o driver.o
+OBJ = othello.o mcts.o mcts-cuda.o driver.o
 
 othello: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
@@ -13,6 +13,9 @@ driver.o: driver.cpp
 
 %.o: %.cpp %.hpp vector.hpp constants.hpp
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+mcts-cuda.o: mcts-cuda.cu
+	$(CC) $(CFLAGS) -c -o $@ $< 
 
 clean:
 	rm -f othello *.o

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "constants.hpp"
+#include "mcts-cuda.hpp"
 #include "othello.hpp"
 #include "vector.hpp"
 
@@ -78,12 +79,6 @@ class node {
     }
 };
 
-typedef struct _sim_results {
-    uint32_t n;
-    uint32_t wins;
-    uint32_t losses;
-} sim_results;
-
 static move choose_move(othello *board, vector<move> *&moves) {
     for (uint8_t i = 0; i < moves->size(); i++) {
         move mv = moves->get(i);
@@ -143,12 +138,12 @@ static int8_t sim_rand_game(othello *starting_board) {
     othello *board = new othello(starting_board);
 
     uint8_t *piece_count_a, *piece_count_b;
-    if (board->get_turn() == BLACK) {
-        piece_count_a = &board->get_n_black();
-        piece_count_b = &board->get_n_white();
+    if (board->turn == BLACK) {
+        piece_count_a = &board->n_black;
+        piece_count_b = &board->n_white;
     } else {
-        piece_count_a = &board->get_n_white();
-        piece_count_b = &board->get_n_black();
+        piece_count_a = &board->n_white;
+        piece_count_b = &board->n_black;
     }
 
     while (board->get_n_placed() != N * N) {
@@ -190,15 +185,14 @@ static void backprop(sim_results &results, node *&nd) {
     node *current_node = nd;
     while (current_node != NULL) {
         current_node->n += results.n;
-        current_node->wins +=
-            current_node->board->get_turn() == nd->board->get_turn()
-                ? results.wins
-                : results.losses;
+        current_node->wins += current_node->board->turn == nd->board->turn
+                                  ? results.wins
+                                  : results.losses;
         current_node = current_node->parent;
     }
 }
 
-void find_best_move(othello *starting_board) {
+void find_best_move(othello *starting_board, bool cuda) {
     vector<move> *moves = starting_board->generate_moves();
     if (moves->is_empty()) {
         delete moves;
@@ -216,7 +210,11 @@ void find_best_move(othello *starting_board) {
             current_node = current_node->select_child(n);
         if (current_node->unvisited->size() != 0)
             current_node = current_node->expand();
-        sim_results results = sim_n_games(N_SIMS, current_node->board);
+        sim_results results;
+        if (cuda)
+            results = sim_n_games_cuda(N_SIMS, current_node->board);
+        else
+            results = sim_n_games(N_SIMS, current_node->board);
         backprop(results, current_node);
         n += N_SIMS;
 

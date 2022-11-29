@@ -24,13 +24,18 @@ int main(int ac, char **av) {
         }
         // MCTS move
         case '1': {
-            find_best_move(board);
+            find_best_move(board, false);
             break;
         }
         // make given move
         case '2': {
             board->make_move({(int8_t)atoi(av[4]), (int8_t)atoi(av[5])});
             board->print();
+        }
+        // MCTS with CUDA move
+        case '3': {
+            find_best_move(board, true);
+            break;
         }
     }
 

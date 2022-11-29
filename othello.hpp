@@ -15,15 +15,15 @@ typedef struct _move {
 
 class othello {
    private:
+    bool is_move(uint8_t row, uint8_t col);
+
+   public:
     bool *black;
     bool *white;
     bool turn;
     uint8_t n_black;
     uint8_t n_white;
 
-    bool is_move(uint8_t row, uint8_t col);
-
-   public:
     othello();
 
     othello(const othello *other);
@@ -43,12 +43,6 @@ class othello {
     void print_grid();
 
     inline void change_turn() { turn = !turn; }
-
-    inline bool &get_turn() { return turn; }
-
-    inline uint8_t &get_n_black() { return n_black; }
-
-    inline uint8_t &get_n_white() { return n_white; }
 
     inline uint8_t get_n_placed() { return n_black + n_white; }
 };

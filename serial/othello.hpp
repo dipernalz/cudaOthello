@@ -32,7 +32,7 @@ class othello {
 
     ~othello();
 
-    vector<move> generate_moves();
+    vector<move> *generate_moves();
 
     bool make_move(move m);
 

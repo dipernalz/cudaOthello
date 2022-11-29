@@ -14,11 +14,12 @@ int main(int ac, char **av) {
     switch (*av[3]) {
         // random move
         case '0': {
-            vector<move> moves = board->generate_moves();
-            if (!moves.is_empty()) {
-                board->make_move(moves.get_random_entry());
+            vector<move> *moves = board->generate_moves();
+            if (!moves->is_empty()) {
+                board->make_move(moves->get_random_entry());
                 board->print();
             }
+            delete moves;
             break;
         }
         // MCTS move

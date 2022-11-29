@@ -4,7 +4,7 @@ import subprocess
 
 
 N = 8
-TIMEOUT = 10
+TIMEOUT = 5
 STARTING_BOARD = "...........................WB......BW..........................."
 
 

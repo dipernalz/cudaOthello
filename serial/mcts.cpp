@@ -18,7 +18,7 @@ class node {
 
     node *parent;
     vector<node *> *children;
-    vector<move> unvisited;
+    vector<move> *unvisited;
 
     uint32_t wins;
     uint32_t n;
@@ -38,10 +38,11 @@ class node {
         delete board;
         for (uint8_t i = 0; i < children->size(); i++) delete children->get(i);
         delete children;
+        delete unvisited;
     }
 
     node *expand() {
-        move mv = unvisited.remove(rand() % unvisited.size());
+        move mv = unvisited->remove(rand() % unvisited->size());
         othello *next_board = new othello(board);
         next_board->make_move(mv);
 
@@ -83,41 +84,59 @@ typedef struct _sim_results {
     uint32_t losses;
 } sim_results;
 
-static move choose_move(othello *board, vector<move> &moves) {
-    if (!(rand() % 5)) {
-        for (uint8_t i = 0; i < moves.size(); i++) {
-            move mv = moves.get(i);
-            if ((mv.row == 0 || mv.row == N - 1) &&
-                (mv.col == 0 || mv.col == N - 1)) {
-                return mv;
-            }
-        }
-
-        move mv = moves.get(rand() % moves.size());
-        for (uint8_t i = 0; i < 4; i++) {
-            if ((mv.row == 1 || mv.row == N - 2) &&
-                (mv.col == 1 || mv.col == N - 2))
-                mv = moves.get(rand() % moves.size());
-            else
-                break;
-        }
-        return mv;
-    };
-
-    move best_mv;
-    int32_t best_eval = INT32_MIN;
-    for (uint8_t i = 0; i < moves.size(); i++) {
-        othello *b = new othello(board);
-        move mv = moves.get(i);
-        b->make_move(mv);
-        int32_t eval = -b->eval();
-        delete b;
-        if (eval > best_eval) {
-            best_eval = eval;
-            best_mv = mv;
+static move choose_move(othello *board, vector<move> *&moves) {
+    for (uint8_t i = 0; i < moves->size(); i++) {
+        move mv = moves->get(i);
+        if ((mv.row == 0 || mv.row == N - 1) &&
+            (mv.col == 0 || mv.col == N - 1)) {
+            return mv;
         }
     }
-    return best_mv;
+
+    move mv = moves->get(rand() % moves->size());
+    for (uint8_t i = 0; i < 4; i++) {
+        if ((mv.row == 1 || mv.row == N - 2) &&
+            (mv.col == 1 || mv.col == N - 2))
+            mv = moves->get(rand() % moves->size());
+        else
+            break;
+    }
+    return mv;
+
+    // if (!(rand() % 5)) {
+    //     for (uint8_t i = 0; i < moves.size(); i++) {
+    //         move mv = moves.get(i);
+    //         if ((mv.row == 0 || mv.row == N - 1) &&
+    //             (mv.col == 0 || mv.col == N - 1)) {
+    //             return mv;
+    //         }
+    //     }
+
+    //     move mv = moves.get(rand() % moves.size());
+    //     for (uint8_t i = 0; i < 4; i++) {
+    //         if ((mv.row == 1 || mv.row == N - 2) &&
+    //             (mv.col == 1 || mv.col == N - 2))
+    //             mv = moves.get(rand() % moves.size());
+    //         else
+    //             break;
+    //     }
+    //     return mv;
+    // };
+
+    // move best_mv;
+    // int32_t best_eval = INT32_MIN;
+    // for (uint8_t i = 0; i < moves.size(); i++) {
+    //     othello *b = new othello(board);
+    //     move mv = moves.get(i);
+    //     b->make_move(mv);
+    //     int32_t eval = -b->eval();
+    //     delete b;
+    //     if (eval > best_eval) {
+    //         best_eval = eval;
+    //         best_mv = mv;
+    //     }
+    // }
+    // return best_mv;
 }
 
 static int8_t sim_rand_game(othello *starting_board) {
@@ -133,15 +152,21 @@ static int8_t sim_rand_game(othello *starting_board) {
     }
 
     while (board->get_n_placed() != N * N) {
-        vector<move> moves = board->generate_moves();
-        if (moves.is_empty()) {
+        vector<move> *moves = board->generate_moves();
+        if (moves->is_empty()) {
             board->change_turn();
-            vector<move> moves = board->generate_moves();
-            if (moves.is_empty()) break;
+            delete moves;
+            vector<move> *moves = board->generate_moves();
+            if (moves->is_empty()) {
+                delete moves;
+                break;
+            }
             board->make_move(choose_move(board, moves));
+            delete moves;
             continue;
         }
         board->make_move(choose_move(board, moves));
+        delete moves;
     }
 
     int8_t result = ((int8_t)*piece_count_a) - ((int8_t)*piece_count_b);
@@ -174,17 +199,22 @@ static void backprop(sim_results &results, node *&nd) {
 }
 
 void find_best_move(othello *starting_board) {
-    if (starting_board->generate_moves().is_empty()) return;
+    vector<move> *moves = starting_board->generate_moves();
+    if (moves->is_empty()) {
+        delete moves;
+        return;
+    }
+    delete moves;
 
     node *root = new node(new othello(starting_board), NULL);
 
     uint32_t n = 0;
     for (uint32_t i = 0; i < MAX_ITER; i++) {
         node *current_node = root;
-        while (current_node->unvisited.size() == 0 &&
+        while (current_node->unvisited->size() == 0 &&
                current_node->children->size() > 0)
             current_node = current_node->select_child(n);
-        if (current_node->unvisited.size() != 0)
+        if (current_node->unvisited->size() != 0)
             current_node = current_node->expand();
         sim_results results = sim_n_games(N_SIMS, current_node->board);
         backprop(results, current_node);

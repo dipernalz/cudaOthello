@@ -71,6 +71,8 @@ othello::othello(char *input, char trn) {
     black = new bool[N * N]();
     white = new bool[N * N]();
 
+    n_black = 0;
+    n_white = 0;
     for (int i = 0; i < N * N; i++) {
         if (input[i] == 'B') {
             black[i] = TAKEN;
@@ -89,13 +91,13 @@ othello::~othello() {
     delete[] white;
 }
 
-vector<move> othello::generate_moves() {
-    vector<move> moves;
+vector<move> *othello::generate_moves() {
+    vector<move> *moves = new vector<move>();
     for (int8_t r = 0; r < N; r++) {
         for (int8_t c = 0; c < N; c++) {
             if (!black[BOARD_INDEX(r, c)] && !white[BOARD_INDEX(r, c)] &&
                 is_move(r, c))
-                moves.push({r, c});
+                moves->push({r, c});
         }
     }
     return moves;
@@ -175,9 +177,9 @@ int32_t othello::eval() {
         }
     }
 
-    score += this->generate_moves().size();
+    score += this->generate_moves()->size();
     change_turn();
-    score -= this->generate_moves().size();
+    score -= this->generate_moves()->size();
     change_turn();
 
     return score;

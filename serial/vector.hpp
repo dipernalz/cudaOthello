@@ -18,7 +18,7 @@ class vector {
         n = 0;
     }
 
-    /* ~vector() { free(data); } */
+    ~vector() { free(data); }
 
     inline T &get(int i) {
         assert(i < n);

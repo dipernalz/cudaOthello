@@ -1,3 +1,4 @@
+#include <cuda.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -34,6 +35,7 @@ int main(int ac, char **av) {
         }
         // MCTS with CUDA move
         case '3': {
+            cudaSetDevice(2);
             find_best_move(board, true);
             break;
         }

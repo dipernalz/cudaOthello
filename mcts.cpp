@@ -10,6 +10,7 @@
 #include "vector.hpp"
 
 #define MAX_ITER 50000
+// #define MAX_ITER 10
 #define N_SIMS 20
 
 class node {

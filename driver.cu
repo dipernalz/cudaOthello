@@ -1,4 +1,5 @@
 #include <cuda.h>
+#include <curand.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -6,6 +7,8 @@
 #include "constants.hpp"
 #include "mcts.hpp"
 #include "othello.hpp"
+
+curandGenerator_t rng;
 
 int main(int ac, char **av) {
     srand((unsigned)time(NULL) ^ getpid());
@@ -36,7 +39,11 @@ int main(int ac, char **av) {
         // MCTS with CUDA move
         case '3': {
             cudaSetDevice(2);
+            curandCreateGenerator(&rng, CURAND_RNG_PSEUDO_MTGP32);
+            curandSetPseudoRandomGeneratorSeed(rng,
+                                               (unsigned)time(NULL) ^ getpid());
             find_best_move(board, true);
+            curandDestroyGenerator(rng);
             break;
         }
     }

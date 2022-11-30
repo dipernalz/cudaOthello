@@ -1,7 +1,7 @@
 CC = nvcc
 
 # CFLAGS = -I. -O3 -DNDEBUG=1
-CFLAGS = -I. -g
+CFLAGS = -I. -g -lcurand
 
 OBJ = othello.o mcts.o mcts-cuda.o driver.o
 

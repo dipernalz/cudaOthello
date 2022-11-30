@@ -5,27 +5,10 @@
 #include "mcts.hpp"
 #include "othello.hpp"
 
+#define B 8
+#define T 8
+
 extern curandGenerator_t rng;
-
-move choose_move(othello *board, vector<move> *&moves) {
-    for (uint8_t i = 0; i < moves->size(); i++) {
-        move mv = moves->get(i);
-        if ((mv.row == 0 || mv.row == N - 1) &&
-            (mv.col == 0 || mv.col == N - 1)) {
-            return mv;
-        }
-    }
-
-    move mv = moves->get(rand() % moves->size());
-    for (uint8_t i = 0; i < 4; i++) {
-        if ((mv.row == 1 || mv.row == N - 2) &&
-            (mv.col == 1 || mv.col == N - 2))
-            mv = moves->get(rand() % moves->size());
-        else
-            break;
-    }
-    return mv;
-}
 
 static __device__ int is_move(int *black, int *white, int turn, int row,
                               int col) {
@@ -38,9 +21,7 @@ static __device__ int is_move(int *black, int *white, int turn, int row,
         board_b = black;
     }
 
-    // #pragma unroll
     for (int dr = -1; dr <= 1; dr++) {
-        // #pragma unroll
         for (int dc = -1; dc <= 1; dc++) {
             if (dr == 0 && dc == 0) continue;
             int tr = row + dr;
@@ -61,9 +42,7 @@ static __device__ int is_move(int *black, int *white, int turn, int row,
 static __device__ int generate_moves(int *black, int *white, int turn,
                                      int *moves_r, int *moves_c) {
     int n_moves = 0;
-    // #pragma unroll
     for (int r = 0; r < N; r++) {
-        // #pragma unroll
         for (int c = 0; c < N; c++) {
             if (!black[BOARD_INDEX(r, c)] && !white[BOARD_INDEX(r, c)] &&
                 is_move(black, white, turn, r, c)) {
@@ -93,9 +72,7 @@ static __device__ void make_move(int *black, int *white, int *turn,
     }
 
     int move_made = false;
-    // #pragma unroll
     for (int dr = -1; dr <= 1; dr++) {
-        // #pragma unroll
         for (int dc = -1; dc <= 1; dc++) {
             if (dr == 0 && dc == 0) continue;
             int tr = row + dr;
@@ -126,21 +103,20 @@ static __device__ void make_move(int *black, int *white, int *turn,
 
 static __global__ void sim_rand_game(int *black, int *white, unsigned int *rand,
                                      int *turn, int *n_black, int *n_white,
-                                     int *result) {
-    __shared__ int s_black[N * N];
-    __shared__ int s_white[N * N];
-    __shared__ int s_moves_r[N * N];
-    __shared__ int s_moves_c[N * N];
+                                     int *wins, int *losses) {
+    __shared__ int s_black[T][N * N];
+    __shared__ int s_white[T][N * N];
+    __shared__ int s_moves_r[T][N * N];
+    __shared__ int s_moves_c[T][N * N];
 
     int r_turn = *turn;
     int r_n_black = *n_black;
     int r_n_white = *n_white;
-    int r_rand_idx = 0;
+    int r_rand_idx = T * N * N * blockIdx.x + N * N * threadIdx.x;
 
-#pragma unroll
     for (int i = 0; i < N * N; i++) {
-        s_black[i] = black[i];
-        s_white[i] = white[i];
+        s_black[threadIdx.x][i] = black[i];
+        s_white[threadIdx.x][i] = white[i];
     }
 
     int *piece_count_a, *piece_count_b;
@@ -155,39 +131,34 @@ static __global__ void sim_rand_game(int *black, int *white, unsigned int *rand,
     int idx;
     while (r_n_black + r_n_white != N * N) {
         int n_moves =
-            generate_moves(s_black, s_white, r_turn, s_moves_r, s_moves_c);
+            generate_moves(s_black[threadIdx.x], s_white[threadIdx.x], r_turn,
+                           s_moves_r[threadIdx.x], s_moves_c[threadIdx.x]);
         if (n_moves == 0) {
             r_turn = !r_turn;
-            n_moves =
-                generate_moves(s_black, s_white, r_turn, s_moves_r, s_moves_c);
+            n_moves = generate_moves(s_black[threadIdx.x], s_white[threadIdx.x],
+                                     r_turn, s_moves_r[threadIdx.x],
+                                     s_moves_c[threadIdx.x]);
             if (n_moves == 0) break;
             idx = rand[r_rand_idx++] % n_moves;
-            make_move(s_black, s_white, &r_turn, &r_n_black, &r_n_white,
-                      s_moves_r[idx], s_moves_c[idx]);
+            make_move(s_black[threadIdx.x], s_white[threadIdx.x], &r_turn,
+                      &r_n_black, &r_n_white, s_moves_r[threadIdx.x][idx],
+                      s_moves_c[threadIdx.x][idx]);
             continue;
         }
         idx = rand[r_rand_idx++] % n_moves;
-        make_move(s_black, s_white, &r_turn, &r_n_black, &r_n_white,
-                  s_moves_r[idx], s_moves_c[idx]);
+        make_move(s_black[threadIdx.x], s_white[threadIdx.x], &r_turn,
+                  &r_n_black, &r_n_white, s_moves_r[threadIdx.x][idx],
+                  s_moves_c[threadIdx.x][idx]);
     }
 
-    *result = *piece_count_a - *piece_count_b;
+    atomicAdd(wins, *piece_count_a - *piece_count_b > 0 ? 1 : 0);
+    atomicAdd(losses, *piece_count_a - *piece_count_b < 0 ? 1 : 0);
 }
 
-void reset_cuda_board(int *h_black, int *h_white, int *h_turn, int *h_n_black,
-                      int *h_n_white, int *c_black, int *c_white, int *c_turn,
-                      int *c_n_black, int *c_n_white) {
-    cudaMemcpy(c_black, h_black, N * N * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(c_white, h_white, N * N * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(c_turn, h_turn, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(c_n_black, h_n_black, sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(c_n_white, h_n_white, sizeof(int), cudaMemcpyHostToDevice);
-}
+sim_results sim_games_cuda(othello *board) {
+    sim_results results = {B * T, 0, 0};
 
-sim_results sim_n_games_cuda(uint32_t n, othello *board) {
-    sim_results results = {n, 0, 0};
-
-    int *h_black, *h_white, h_turn, h_n_black, h_n_white, h_result;
+    int *h_black, *h_white, h_turn, h_n_black, h_n_white;
     h_black = (int *)malloc(N * N * sizeof(int));
     h_white = (int *)malloc(N * N * sizeof(int));
     for (int i = 0; i < N * N; i++) {
@@ -198,29 +169,31 @@ sim_results sim_n_games_cuda(uint32_t n, othello *board) {
         h_n_white = (int)board->n_white;
     }
 
-    int *c_black, *c_white, *c_turn, *c_n_black, *c_n_white, *c_result;
+    int *c_black, *c_white, *c_turn, *c_n_black, *c_n_white, *c_wins, *c_losses;
     unsigned int *c_rand;
+
     cudaMalloc(&c_black, N * N * sizeof(int));
     cudaMalloc(&c_white, N * N * sizeof(int));
-    cudaMalloc(&c_rand, N * N * sizeof(unsigned int));
+    cudaMalloc(&c_rand, B * T * N * N * sizeof(unsigned int));
     cudaMalloc(&c_turn, sizeof(int));
     cudaMalloc(&c_n_black, sizeof(int));
     cudaMalloc(&c_n_white, sizeof(int));
-    cudaMalloc(&c_result, sizeof(int));
+    cudaMalloc(&c_wins, sizeof(int));
+    cudaMalloc(&c_losses, sizeof(int));
 
-    for (uint32_t i = 0; i < n; i++) {
-        reset_cuda_board(h_black, h_white, &h_turn, &h_n_black, &h_n_white,
-                         c_black, c_white, c_turn, c_n_black, c_n_white);
-        curandGenerate(rng, c_rand, N * N);
-        sim_rand_game<<<1, 1>>>(c_black, c_white, c_rand, c_turn, c_n_black,
-                                c_n_white, c_result);
-        cudaMemcpy(&h_result, c_result, sizeof(int), cudaMemcpyDeviceToHost);
-        if (h_result > 0)
-            results.wins++;
-        else if (h_result < 0)
-            results.losses++;
-        break;
-    }
+    cudaMemcpy(c_black, h_black, N * N * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(c_white, h_white, N * N * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(c_turn, &h_turn, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(c_n_black, &h_n_black, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(c_n_white, &h_n_white, sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemset(c_wins, 0, sizeof(int));
+    cudaMemset(c_losses, 0, sizeof(int));
+
+    curandGenerate(rng, c_rand, B * T * N * N);
+    sim_rand_game<<<B, T>>>(c_black, c_white, c_rand, c_turn, c_n_black,
+                            c_n_white, c_wins, c_losses);
+    cudaMemcpy(&results.wins, c_wins, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&results.losses, c_losses, sizeof(int), cudaMemcpyDeviceToHost);
 
     cudaFree(c_black);
     cudaFree(c_white);
@@ -228,7 +201,11 @@ sim_results sim_n_games_cuda(uint32_t n, othello *board) {
     cudaFree(c_turn);
     cudaFree(c_n_black);
     cudaFree(c_n_white);
-    cudaFree(c_result);
+    cudaFree(c_wins);
+    cudaFree(c_losses);
+
+    free(h_black);
+    free(h_white);
 
     return results;
 }

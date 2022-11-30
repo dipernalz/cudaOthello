@@ -34,7 +34,7 @@ def get_next_board(board, turn, mode, r=None, c=None):
 
 def play_n_games(n):
     global TIMEOUT
-    TIMEOUT = .1
+    TIMEOUT = 1
     wins = 0
     draws = 0
     losses = 0
@@ -44,12 +44,12 @@ def play_n_games(n):
         turn = "B"
         while board.count("."):
             next_board = get_next_board(
-                board, turn, "1" if turn == start_turn else "0",
+               board, turn, "3" if turn == start_turn else "1",
             )
             if not next_board:
                 turn = other_turn(turn) 
                 next_board = get_next_board(
-                    board, turn, "1" if turn == start_turn else "0",
+                    board, turn, "3" if turn == start_turn else "1",
                 )
                 if not next_board:
                     break
@@ -81,7 +81,7 @@ def play_user(start_turn):
             next_board = get_next_board(board, turn, "2", r, c)
         else:
             print("Waiting...\n")
-            next_board = get_next_board(board, turn, "1")
+            next_board = get_next_board(board, turn, "3")
         if not next_board:
             turn = other_turn(turn)
             if turn == start_turn:
@@ -89,7 +89,7 @@ def play_user(start_turn):
                 print()
                 next_board = get_next_board(board, turn, "2", r, c)
             else:
-                next_board = get_next_board(board, turn, "1")
+                next_board = get_next_board(board, turn, "3")
             if not next_board:
                 return
         board = next_board
@@ -99,7 +99,7 @@ def play_user(start_turn):
 
 
 def main():
-    # play_n_games(1000)
+    # play_n_games(100)
     play_user("W")
 
 

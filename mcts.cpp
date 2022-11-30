@@ -9,9 +9,8 @@
 #include "othello.hpp"
 #include "vector.hpp"
 
-#define MAX_ITER 50000
-// #define MAX_ITER 10
-#define N_SIMS 20
+#define MAX_ITER 100000
+#define N_SIMS 64
 
 class node {
    public:
@@ -81,58 +80,7 @@ class node {
 };
 
 static move choose_move(othello *board, vector<move> *&moves) {
-    for (uint8_t i = 0; i < moves->size(); i++) {
-        move mv = moves->get(i);
-        if ((mv.row == 0 || mv.row == N - 1) &&
-            (mv.col == 0 || mv.col == N - 1)) {
-            return mv;
-        }
-    }
-
-    move mv = moves->get(rand() % moves->size());
-    for (uint8_t i = 0; i < 4; i++) {
-        if ((mv.row == 1 || mv.row == N - 2) &&
-            (mv.col == 1 || mv.col == N - 2))
-            mv = moves->get(rand() % moves->size());
-        else
-            break;
-    }
-    return mv;
-
-    // if (!(rand() % 5)) {
-    //     for (uint8_t i = 0; i < moves.size(); i++) {
-    //         move mv = moves.get(i);
-    //         if ((mv.row == 0 || mv.row == N - 1) &&
-    //             (mv.col == 0 || mv.col == N - 1)) {
-    //             return mv;
-    //         }
-    //     }
-
-    //     move mv = moves.get(rand() % moves.size());
-    //     for (uint8_t i = 0; i < 4; i++) {
-    //         if ((mv.row == 1 || mv.row == N - 2) &&
-    //             (mv.col == 1 || mv.col == N - 2))
-    //             mv = moves.get(rand() % moves.size());
-    //         else
-    //             break;
-    //     }
-    //     return mv;
-    // };
-
-    // move best_mv;
-    // int32_t best_eval = INT32_MIN;
-    // for (uint8_t i = 0; i < moves.size(); i++) {
-    //     othello *b = new othello(board);
-    //     move mv = moves.get(i);
-    //     b->make_move(mv);
-    //     int32_t eval = -b->eval();
-    //     delete b;
-    //     if (eval > best_eval) {
-    //         best_eval = eval;
-    //         best_mv = mv;
-    //     }
-    // }
-    // return best_mv;
+    return moves->get(rand() % moves->size());
 }
 
 static int8_t sim_rand_game(othello *starting_board) {
@@ -213,11 +161,11 @@ void find_best_move(othello *starting_board, bool cuda) {
             current_node = current_node->expand();
         sim_results results;
         if (cuda)
-            results = sim_n_games_cuda(N_SIMS, current_node->board);
+            results = sim_games_cuda(current_node->board);
         else
             results = sim_n_games(N_SIMS, current_node->board);
         backprop(results, current_node);
-        n += N_SIMS;
+        n += results.n;
 
         if (root->children != NULL) {
             move mv;
@@ -225,13 +173,15 @@ void find_best_move(othello *starting_board, bool cuda) {
             for (int i = 0; i < root->children->size(); i++) {
                 node *child = root->children->get(i);
                 double score = ((double)child->n) / ((double)(child->wins + 1));
-                if ((child->mv.row == 0 || child->mv.row == N - 1) &&
-                    (child->mv.col == 0 || child->mv.col == N - 1)) {
-                    score *= 1.5;
-                }
-                if ((child->mv.row == 1 || child->mv.row == N - 2) &&
-                    (child->mv.col == 1 || child->mv.col == N - 2)) {
-                    score /= 1.5;
+                if (starting_board->get_n_placed() <= 48) {
+                    if ((child->mv.row == 0 || child->mv.row == N - 1) &&
+                        (child->mv.col == 0 || child->mv.col == N - 1)) {
+                        score *= 1.5;
+                    }
+                    if ((child->mv.row == 1 || child->mv.row == N - 2) &&
+                        (child->mv.col == 1 || child->mv.col == N - 2)) {
+                        score /= 1.5;
+                    }
                 }
                 if (score > best_score) {
                     best_score = score;

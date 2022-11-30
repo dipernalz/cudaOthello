@@ -6,6 +6,6 @@
 #include "mcts.hpp"
 #include "othello.hpp"
 
-sim_results sim_n_games_cuda(uint32_t n, othello *board);
+sim_results sim_games_cuda(othello *board);
 
 #endif

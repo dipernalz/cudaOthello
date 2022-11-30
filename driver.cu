@@ -35,6 +35,7 @@ int main(int ac, char **av) {
         case '2': {
             board->make_move({(int8_t)atoi(av[4]), (int8_t)atoi(av[5])});
             board->print();
+            break;
         }
         // MCTS with CUDA move
         case '3': {
